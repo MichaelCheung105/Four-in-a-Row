@@ -1,25 +1,44 @@
 import numpy as np
-from util import score
+from util import place_chess
+from models import model
 
 class agent():
-    def __init__(self, role: int, model: object):
+    def __init__(self, role: int, algo: str, epsilon: float, learning_rate: float):
         self.role = role
-        self.model = model
-        self.memory = []
+        self.model = model(algo, epsilon, learning_rate)
 
-    def place_chess(self, board: np.ndarray):
-        winner = score(board)
-        return board, winner
+    def step(self, board: np.ndarray):
+        action = self.model.get_action(board)
+        board = place_chess(board, action, self.role)
+        return board
 
-    def bp(self, winner: int):
-        if self.role == 1 and winner == 1:
-            pass
+    def learn(self, winner: int):
+        if winner == 0:
+            self.model.bp(0)
+        
+        elif self.role == winner:
+            self.model.bp(1)
 
-        if self.role == 1 and winner == -1:
-            pass
+        else:
+            self.model.bp(-1)
+            
+            
+            
+            
+# Building DQN
+import math
+import random
+import numpy as np
+from collections import namedtuple
+from itertools import count
 
-        if self.role == -1 and winner == 1:
-            pass
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+import torchvision.transforms as T
 
-        if self.role == -1 and winner == -1
-            pass
+class DQN(nn.Module):
+    def __init__(self):
+        super(DQN, self).__init__()
+        self.conv1 = nn.Conv2d()
