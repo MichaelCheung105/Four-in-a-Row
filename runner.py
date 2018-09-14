@@ -7,7 +7,7 @@ mode = 'train' # "train" means training agent; "player_1" means using computer a
 algo = 'DQN' # select an algorithm for training the agent
 epsilon = 0.1 # choose the epsilon value
 learning_rate = 0.1 # choose the learning rate
-total_episode = 100 # Decide total episode
+total_episode = 10 # Decide total episode
 np.random.seed(123)
 '''Parameters'''
 
