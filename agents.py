@@ -1,5 +1,4 @@
 import numpy as np
-from util import place_chess
 from models import model
 
 class agent():
@@ -9,7 +8,14 @@ class agent():
 
     def step(self, board: np.ndarray):
         action = self.model.get_action(board)
-        board = place_chess(board, action, self.role)
+        location = 5-(np.fliplr(board.T)==0).argmax(axis=1)[action]
+        
+        while board[location, action] != 0:
+            print('Occupied!! Try another move')
+            action = self.model.get_action(board)
+            location = 5-(np.fliplr(board.T)==0).argmax(axis=1)[action]
+            
+        board[location,action] = self.role
         return board
 
     def learn(self, winner: int):
@@ -22,23 +28,3 @@ class agent():
         else:
             self.model.bp(-1)
             
-            
-            
-            
-# Building DQN
-import math
-import random
-import numpy as np
-from collections import namedtuple
-from itertools import count
-
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import torchvision.transforms as T
-
-class DQN(nn.Module):
-    def __init__(self):
-        super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d()
