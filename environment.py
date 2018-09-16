@@ -28,31 +28,29 @@ class environment():
 
     # train the 2 computer agents
     def train(self, total_episode: int):
-        self.memory = {}
         episode = 0
         start_time = time.time()
         while episode < total_episode:
             # reset the episode
             episode += 1
-            self.memory[episode] = []
+            episode_memory = []
             board = self.reset()
             winner = 0
             
             # 2 agents keep playing against each other until a winner is decided or there is no more space for placing chess
             while 0 in board and winner == 0:
-                board = self.first_mover.step(board)
+                in_board = board
+                board, action = self.first_mover.step(in_board.copy())
                 winner = self.score(board)
-                self.memory[episode].append(board.copy())
-                if winner != 0:
-                    break
+                episode_memory.append({'s':in_board, 'a':action, 'r':winner, 's_':board})
                 
-                elif 0 in board:
-                    board = self.second_mover.step(board)
+                if 0 in board and winner == 0:
+                    episode_memory.append(board)
+                    in_board = board
+                    board, action = self.second_mover.step(in_board.copy())
                     winner = self.score(board)
-                    self.memory[episode].append(board.copy())
-                    if winner != 0:
-                        break
-            
+                    episode_memory.append({'s':in_board, 'a':action, 'r':winner, 's_':board})
+
             print("Episode " + str(episode))
             if winner == 0:
                 print("It's a draw!")
@@ -60,12 +58,28 @@ class environment():
                 print('first_mover wins!!!')
             elif winner == -1:
                 print('second_mover wins!!!')
-                
-            self.plot(board)
-                
+            
+            episode_length = len(episode_memory)
+            for index, memory in enumerate(episode_memory):
+                if index % 2 == 0:
+                    s = episode_memory[index]['s']
+                    a = episode_memory[index]['a']
+                    r = episode_memory[index]['r']                    
+                    s_ = [episode_memory[index]['s_'] if index + 1 == episode_length else episode_memory[index+1]['s_']][0]
+                    self.first_mover.store(s, a, r, s_)
+                    
+                else:
+                    s = episode_memory[index]['s']
+                    a = episode_memory[index]['a']
+                    r = episode_memory[index]['r']
+                    s_ = [episode_memory[index]['s_'] if index + 1 == episode_length else episode_memory[index+1]['s_']][0]
+                    self.second_mover.store(s, a, r, s_)
+
             # train the DQN
-            self.first_mover.learn(winner=winner)
-            self.second_mover.learn(winner=winner)
+            if self.first_mover.model.memory_counter > self.first_mover.model.memory_capacity:
+                self.first_mover.model.learn()
+            if self.second_mover.model.memory_counter > self.second_mover.model.memory_capacity:
+                self.second_mover.model.learn()
 
         end_time = time.time()
         print('training time taken (' + str(end_time - start_time) + "seconds)")

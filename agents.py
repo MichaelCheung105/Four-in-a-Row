@@ -1,10 +1,10 @@
 import numpy as np
-from models import model
+from models import DQN
 
 class agent():
-    def __init__(self, role: int, algo: str, epsilon: float, learning_rate: float):
+    def __init__(self, role, epsilon, learning_rate, gamma, batch_size, target_replace_iter, memory_capacity, n_actions, n_states):
         self.role = role
-        self.model = model(algo, epsilon, learning_rate)
+        self.model = DQN(epsilon, learning_rate, gamma, batch_size, target_replace_iter, memory_capacity, n_actions, n_states)
 
     def step(self, board: np.ndarray):
         action = self.model.get_action(board)
@@ -16,15 +16,11 @@ class agent():
             location = 5-(np.fliplr(board.T)==0).argmax(axis=1)[action]
             
         board[location,action] = self.role
-        return board
-
-    def learn(self, winner: int):
-        if winner == 0:
-            self.model.bp(0)
-        
-        elif self.role == winner:
-            self.model.bp(1)
-
-        else:
-            self.model.bp(-1)
-            
+        return board, action
+    
+    def store(self, in_board, action, winner, board):
+        s  = in_board.flatten()
+        a  = action
+        r  = winner * self.role
+        s_ = board.flatten()
+        self.model.store_transition(s, a, r, s_)
