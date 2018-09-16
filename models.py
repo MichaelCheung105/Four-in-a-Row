@@ -14,21 +14,21 @@ class Net(nn.Module):
     def __init__(self, n_states, n_actions):
         super(Net, self).__init__()
         self.fc1 = nn.Linear(n_states, 12)
-        self.fc1.weight.data.normal(0, 0.1)
+        self.fc1.weight.data.normal_(0, 0.1)
         self.fc2 = nn.Linear(12, 12)
-        self.fc2.weight.data.normal(0, 0.1)
+        self.fc2.weight.data.normal_(0, 0.1)
         self.out = nn.Linear(12, n_actions)
-        self.out.weight.data.normal(0, 0.1)
+        self.out.weight.data.normal_(0, 0.1)
         
-        def forward(self, x):
-            x = self.fc1(x)
-            x = F.relu(x)
-            x = self.fc2(x)
-            x = F.relu(x)
-            actions_value = self.out(x)
-            return actions_value
+    def forward(self, x):
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        x = F.relu(x)
+        actions_value = self.out(x)
+        return actions_value
 
-class DQN():
+class DQN(object):
     def __init__(self, epsilon, learning_rate, gamma, batch_size, target_replace_iter, memory_capacity, n_actions, n_states):
         self.epsilon = epsilon
         self.learning_rate = learning_rate
@@ -45,16 +45,17 @@ class DQN():
         self.memory = np.zeros((memory_capacity, n_states * 2 + 2))
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=learning_rate)
         self.loss_func = nn.MSELoss()
-    
-    def get_action(self, x):
-        x = torch.unsqueeze(torch.FloatTensor(x), 0)
+
+    def get_action(self, board):
+        board = torch.unsqueeze(torch.FloatTensor(board), 0)
         
         if np.random.uniform() < self.epsilon:
-            actions_value = self.eval_net.forward(x)
-            action = torch.max(actions_value, 1)[1].data.numpy()[0,0]
+            actions_value = self.eval_net.forward(board)
+            action = torch.max(actions_value, 1)[1].data.numpy()[0]
         else:
             action = np.random.randint(0, self.n_actions)
             
+        self.epsilon = self.epsilon + 0.01 * (1 - self.epsilon)
         return action
     
     def store_transition(self, s, a, r, s_):
@@ -77,7 +78,7 @@ class DQN():
         
         q_eval = self.eval_net(b_s).gather(1, b_a)
         q_next = self.target_net(b_s_).detach()
-        q_target = b_r + self.gamma * q_next.max(1)[0]
+        q_target = b_r + self.gamma * q_next.max(1)[0].view(self.batch_size, 1)
         loss = self.loss_func(q_eval, q_target)
         
         self.optimizer.zero_grad()

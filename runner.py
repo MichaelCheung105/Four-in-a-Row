@@ -5,7 +5,7 @@ from agents import agent
 '''Parameters'''
 # Runner Parameters
 mode = 'train' # "train" means training agent; "player_1" means using computer as first_mover; "player_2" means using computer as second_mover
-total_episode = 10 # Decide total episode
+total_episode = 1000 # Decide total episode
 np.random.seed(123)
 
 # Model Parameters
@@ -39,8 +39,8 @@ class runner():
             self.env.com_as_player_2()
 
 if __name__ == "__main__":
-    first_mover = agent(role=1, epsilon=epsilon, learning_rate=learning_rate)
-    second_mover = agent(role=-1, epsilon=epsilon, learning_rate=learning_rate)
+    first_mover = agent(1, epsilon, learning_rate, gamma, batch_size, target_replace_iter, memory_capacity, n_actions, n_states)
+    second_mover = agent(-1, epsilon, learning_rate, gamma, batch_size, target_replace_iter, memory_capacity, n_actions, n_states)
     env = environment(first_mover, second_mover)
     runner = runner(env, mode, total_episode)
     runner.start()

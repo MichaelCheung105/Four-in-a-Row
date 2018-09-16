@@ -28,11 +28,13 @@ class environment():
 
     # train the 2 computer agents
     def train(self, total_episode: int):
+        winning_record = []
         episode = 0
         start_time = time.time()
         while episode < total_episode:
             # reset the episode
             episode += 1
+            print(episode)
             episode_memory = []
             board = self.reset()
             winner = 0
@@ -40,17 +42,18 @@ class environment():
             # 2 agents keep playing against each other until a winner is decided or there is no more space for placing chess
             while 0 in board and winner == 0:
                 in_board = board
-                board, action = self.first_mover.step(in_board.copy())
+                board, action = self.first_mover.step(in_board)
                 winner = self.score(board)
-                episode_memory.append({'s':in_board, 'a':action, 'r':winner, 's_':board})
+                episode_memory.append({'in_board':in_board, 'action':action, 'winner':winner, 'board':board})
                 
                 if 0 in board and winner == 0:
-                    episode_memory.append(board)
                     in_board = board
-                    board, action = self.second_mover.step(in_board.copy())
+                    board, action = self.second_mover.step(in_board)
                     winner = self.score(board)
-                    episode_memory.append({'s':in_board, 'a':action, 'r':winner, 's_':board})
-
+                    episode_memory.append({'in_board':in_board, 'action':action, 'winner':winner, 'board':board})
+                
+            # print winner, store winner and plot trend
+            '''
             print("Episode " + str(episode))
             if winner == 0:
                 print("It's a draw!")
@@ -58,22 +61,30 @@ class environment():
                 print('first_mover wins!!!')
             elif winner == -1:
                 print('second_mover wins!!!')
+            '''
+                
+            winning_record.append(winner)
+            if len(winning_record) % 100 == 0:
+                print(winning_record.count(1))
+                print(winning_record.count(0))
+                print(winning_record.count(-1))
             
+            # store transition
             episode_length = len(episode_memory)
             for index, memory in enumerate(episode_memory):
                 if index % 2 == 0:
-                    s = episode_memory[index]['s']
-                    a = episode_memory[index]['a']
-                    r = episode_memory[index]['r']                    
-                    s_ = [episode_memory[index]['s_'] if index + 1 == episode_length else episode_memory[index+1]['s_']][0]
-                    self.first_mover.store(s, a, r, s_)
+                    in_board = episode_memory[index]['in_board']
+                    action = episode_memory[index]['action']
+                    winner = episode_memory[index]['winner']                    
+                    board = [episode_memory[index]['board'] if index + 1 == episode_length else episode_memory[index+1]['board']][0]
+                    self.first_mover.store(in_board, action, winner, board)
                     
                 else:
-                    s = episode_memory[index]['s']
-                    a = episode_memory[index]['a']
-                    r = episode_memory[index]['r']
-                    s_ = [episode_memory[index]['s_'] if index + 1 == episode_length else episode_memory[index+1]['s_']][0]
-                    self.second_mover.store(s, a, r, s_)
+                    in_board = episode_memory[index]['in_board']
+                    action = episode_memory[index]['action']
+                    winner = episode_memory[index]['winner']
+                    board = [episode_memory[index]['board'] if index + 1 == episode_length else episode_memory[index+1]['board']][0]
+                    self.second_mover.store(in_board, action, winner, board)
 
             # train the DQN
             if self.first_mover.model.memory_counter > self.first_mover.model.memory_capacity:
@@ -90,17 +101,36 @@ class environment():
         """
 
     def test(self, trained_agent: str):
-        if trained_agent == 'first_mover':
-            pass
-
-        elif trained_agent == 'second_mover':
-            pass
-
-        elif trained_agent == 'both agents':
-            pass
-
-        else:
-            print('please either pass "first_mover", "second_mover" or "both agents" as argument')
+        winning_record = []
+        episode = 0
+        while episode < 100:
+            # reset the episode
+            episode += 1
+            board = self.reset()
+            winner = 0
+            
+            # 2 agents keep playing against each other until a winner is decided or there is no more space for placing chess
+            while 0 in board and winner == 0:
+                in_board = board
+                if trained_agent != 'second_mover':
+                    board, action = self.first_mover.step(in_board.copy())
+                else:
+                    board, action = self.first_mover.random_action(in_board.copy())
+                winner = self.score(board)
+                
+                if 0 in board and winner == 0:
+                    in_board = board
+                    if trained_agent != 'first_mover':
+                        board, action = self.second_mover.step(in_board.copy())
+                    else:
+                        board, action = self.second_mover.random_action(in_board.copy())
+                    winner = self.score(board)
+                    
+            winning_record.append(winner)
+            
+        print(winning_record.count(1))
+        print(winning_record.count(0))
+        print(winning_record.count(-1))
 
     def com_as_player_1(self):
         pass
