@@ -42,13 +42,13 @@ class environment():
             # 2 agents keep playing against each other until a winner is decided or there is no more space for placing chess
             while 0 in board and winner == 0:
                 in_board = board
-                board, action = self.first_mover.step(in_board)
+                board, action = self.first_mover.step(in_board, episode)
                 winner = self.score(board)
                 episode_memory.append({'in_board':in_board, 'action':action, 'winner':winner, 'board':board})
                 
                 if 0 in board and winner == 0:
                     in_board = board
-                    board, action = self.second_mover.step(in_board)
+                    board, action = self.second_mover.step(in_board, episode)
                     winner = self.score(board)
                     episode_memory.append({'in_board':in_board, 'action':action, 'winner':winner, 'board':board})
                 
@@ -75,14 +75,14 @@ class environment():
                 if index % 2 == 0:
                     in_board = episode_memory[index]['in_board']
                     action = episode_memory[index]['action']
-                    winner = episode_memory[index]['winner']                    
+                    winner = [episode_memory[index]['winner'] if index + 2 != episode_length else episode_memory[index+1]['winner']][0]
                     board = [episode_memory[index]['board'] if index + 1 == episode_length else episode_memory[index+1]['board']][0]
                     self.first_mover.store(in_board, action, winner, board)
                     
                 else:
                     in_board = episode_memory[index]['in_board']
                     action = episode_memory[index]['action']
-                    winner = episode_memory[index]['winner']
+                    winner = [episode_memory[index]['winner'] if index + 2 != episode_length else episode_memory[index+1]['winner']][0]
                     board = [episode_memory[index]['board'] if index + 1 == episode_length else episode_memory[index+1]['board']][0]
                     self.second_mover.store(in_board, action, winner, board)
 
@@ -100,12 +100,13 @@ class environment():
         pickle.dump(self.second_mover, "./trained_models/second_mover.p")
         """
 
-    def test(self, trained_agent: str):
+    def test(self, trained_agent: str, total_episode_trained):
         winning_record = []
         episode = 0
         while episode < 100:
             # reset the episode
             episode += 1
+            print(episode)
             board = self.reset()
             winner = 0
             
@@ -113,17 +114,17 @@ class environment():
             while 0 in board and winner == 0:
                 in_board = board
                 if trained_agent != 'second_mover':
-                    board, action = self.first_mover.step(in_board.copy())
+                    board, action = self.first_mover.step(in_board, total_episode_trained)
                 else:
-                    board, action = self.first_mover.random_action(in_board.copy())
+                    board, action = self.first_mover.random_action(in_board)
                 winner = self.score(board)
                 
                 if 0 in board and winner == 0:
                     in_board = board
                     if trained_agent != 'first_mover':
-                        board, action = self.second_mover.step(in_board.copy())
+                        board, action = self.second_mover.step(in_board, total_episode_trained)
                     else:
-                        board, action = self.second_mover.random_action(in_board.copy())
+                        board, action = self.second_mover.random_action(in_board)
                     winner = self.score(board)
                     
             winning_record.append(winner)

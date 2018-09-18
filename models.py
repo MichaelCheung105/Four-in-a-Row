@@ -29,7 +29,8 @@ class Net(nn.Module):
         return actions_value
 
 class DQN(object):
-    def __init__(self, epsilon, learning_rate, gamma, batch_size, target_replace_iter, memory_capacity, n_actions, n_states):
+    def __init__(self, total_episode, epsilon, learning_rate, gamma, batch_size, target_replace_iter, memory_capacity, n_actions, n_states):
+        self.total_episode = total_episode
         self.epsilon = epsilon
         self.learning_rate = learning_rate
         self.gamma = gamma
@@ -46,16 +47,17 @@ class DQN(object):
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=learning_rate)
         self.loss_func = nn.MSELoss()
 
-    def get_action(self, board):
+    def get_action(self, board, episode, available):
         board = torch.unsqueeze(torch.FloatTensor(board), 0)
-        
+
+        self.epsilon = episode / self.total_episode
         if np.random.uniform() < self.epsilon:
             actions_value = self.eval_net.forward(board)
-            action = torch.max(actions_value, 1)[1].data.numpy()[0]
+            sequence = np.argsort(actions_value.detach().numpy()[0])
+            action = sequence[available[sequence]][-1]
         else:
-            action = np.random.randint(0, self.n_actions)
-            
-        self.epsilon = self.epsilon + 0.01 * (1 - self.epsilon)
+            action = np.random.choice(np.array(range(self.n_actions))[available])
+
         return action
     
     def store_transition(self, s, a, r, s_):
