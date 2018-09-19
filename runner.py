@@ -33,11 +33,8 @@ class runner():
             self.env.test(trained_agent="second_mover", total_episode_trained=self.total_episode)
             self.env.test(trained_agent="both agents", total_episode_trained=self.total_episode)
 
-        if self.mode == 'player_1':
-            self.env.com_as_player_1()
-
-        if self.mode == 'player_2':
-            self.env.com_as_player_2()
+        self.env.com_as_player(com_as='first_mover', total_episode_trained=self.total_episode)
+        self.env.com_as_player(com_as='second_mover', total_episode_trained=self.total_episode)
 
 if __name__ == "__main__":
     first_mover = agent(1, total_episode, epsilon, learning_rate, gamma, batch_size, target_replace_iter, memory_capacity, n_actions, n_states)

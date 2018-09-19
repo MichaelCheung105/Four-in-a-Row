@@ -133,11 +133,46 @@ class environment():
         print(winning_record.count(0))
         print(winning_record.count(-1))
 
-    def com_as_player_1(self):
-        pass
+    def com_as_player(self, com_as, total_episode_trained):
+        board = self.reset()
+        winner = 0
+        while 0 in board and winner == 0:
+            in_board = board
+            if com_as == 'first_mover':
+                board, action = self.first_mover.step(in_board, total_episode_trained)
+            else:
+                print(board)
+                available = np.array([0 in board[:, col] for col in range(7)])
+                action = input("please choose between the following actions:" + str(list(available)))
+                action = int(action)
+                location = 5 - (np.fliplr(board.T) == 0).argmax(axis=1)[action]
 
-    def com_as_player_2(self):
-        pass
+                while board[location, action] != 0:
+                    print('Occupied!! Try another move')
+                    action = input("please choose between the following actions:" + str(list(available)))
+                    location = 5 - (np.fliplr(board.T) == 0).argmax(axis=1)[action]
+
+                board[location, action] = 1
+            winner = self.score(board)
+
+            if 0 in board and winner == 0:
+                in_board = board
+                if com_as == 'second_mover':
+                    board, action = self.second_mover.step(in_board, total_episode_trained)
+                else:
+                    print(board)
+                    available = np.array([0 in board[:, col] for col in range(7)])
+                    action = input("please choose between the following actions:" + str(list(available)))
+                    action = int(action)
+                    location = 5 - (np.fliplr(board.T) == 0).argmax(axis=1)[action]
+
+                    while board[location, action] != 0:
+                        print('Occupied!! Try another move')
+                        action = input("please choose between the following actions:" + str(list(available)))
+                        location = 5 - (np.fliplr(board.T) == 0).argmax(axis=1)[action]
+
+                    board[location, action] = -1
+                winner = self.score(board)
     
     def plot(self, board: np.ndarray):
         plt.figure()
