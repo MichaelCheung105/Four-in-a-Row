@@ -28,6 +28,7 @@ class runner():
     def start(self):
         if self.mode == 'train':
             self.env.train(self.total_episode)
+            self.env.test(trained_agent="none", total_episode_trained=self.total_episode)
             self.env.test(trained_agent="first_mover", total_episode_trained=self.total_episode)
             self.env.test(trained_agent="second_mover", total_episode_trained=self.total_episode)
             self.env.test(trained_agent="both agents", total_episode_trained=self.total_episode)

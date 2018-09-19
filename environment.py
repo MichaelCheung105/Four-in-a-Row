@@ -113,7 +113,7 @@ class environment():
             # 2 agents keep playing against each other until a winner is decided or there is no more space for placing chess
             while 0 in board and winner == 0:
                 in_board = board
-                if trained_agent != 'second_mover':
+                if trained_agent in ['both agents', 'first_mover']:
                     board, action = self.first_mover.step(in_board, total_episode_trained)
                 else:
                     board, action = self.first_mover.random_action(in_board)
@@ -121,7 +121,7 @@ class environment():
                 
                 if 0 in board and winner == 0:
                     in_board = board
-                    if trained_agent != 'first_mover':
+                    if trained_agent in ['both agents', 'second_mover']:
                         board, action = self.second_mover.step(in_board, total_episode_trained)
                     else:
                         board, action = self.second_mover.random_action(in_board)
